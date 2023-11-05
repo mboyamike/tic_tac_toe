@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'dart:math';
 
-void main() => runApp(TicTacToeApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(TicTacToeApp());
+}
 
 class TicTacToeApp extends StatelessWidget {
   @override
@@ -20,26 +27,42 @@ class TicTacToeGame extends StatefulWidget {
 class _TicTacToeGameState extends State<TicTacToeGame> {
   late List<List<String>> _board;
   String _currentPlayer = 'X';
+  late DatabaseReference gameRef;
+
+  // Generate a random game ID
+  final Random _random = Random();
+  String _gameId = '';
 
   @override
   void initState() {
     super.initState();
+    _gameId = _generateRandomGameId();
+    gameRef = FirebaseDatabase.instance.reference().child('games/$_gameId');
     _board = List.generate(3, (_) => List.filled(3, ''));
+    gameRef.set({
+      'board': _board,
+      'currentPlayer': _currentPlayer,
+    });
+    gameRef.onValue.listen((event) {
+      final data = event.snapshot.value as Map<String, dynamic>;
+      setState(() {
+        _board = List.from(data['board']);
+        _currentPlayer = data['currentPlayer'];
+      });
+    });
   }
 
-  void _resetBoard() {
-    setState(() {
-      _board = List.generate(3, (_) => List.filled(3, ''));
-      _currentPlayer = 'X';
-    });
+  // Generate a random game ID
+  String _generateRandomGameId() {
+    const int min = 1000; // You can adjust the range as needed
+    const int max = 9999;
+    return '${_random.nextInt(max - min + 1) + min}';
   }
 
   void _makeMove(int row, int col) {
     if (_board[row][col] == '') {
-      setState(() {
-        _board[row][col] = _currentPlayer;
-        _currentPlayer = (_currentPlayer == 'X') ? 'O' : 'X';
-      });
+      gameRef.child('board/$row/$col').set(_currentPlayer);
+      gameRef.child('currentPlayer').set((_currentPlayer == 'X') ? 'O' : 'X');
     }
   }
 
@@ -68,10 +91,17 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
     return 'draw';
   }
 
+  void _resetBoard() {
+    gameRef.set({
+      'board': List.generate(3, (_) => List.filled(3, '')),
+      'currentPlayer': 'X',
+    });
+  }
+
   Widget _buildTile(int row, int col) {
     return GestureDetector(
       onTap: () {
-        if (_checkWinner() == null) {
+        if (_checkWinner() == null && _currentPlayer == 'X') {
           _makeMove(row, col);
         }
       },
@@ -84,7 +114,7 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
         child: Center(
           child: Text(
             _board[row][col],
-            style: TextStyle(fontSize: 48.0),
+            style: const TextStyle(fontSize: 48.0),
           ),
         ),
       ),
@@ -105,7 +135,7 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tic-Tac-Toe'),
+        title: const Text('Tic-Tac-Toe'),
       ),
       body: Center(
         child: Column(
@@ -113,9 +143,9 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
           children: <Widget>[
             Text(
               status,
-              style: TextStyle(fontSize: 20.0),
+              style: const TextStyle(fontSize: 20.0),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             Column(
               children: _board.asMap().entries.map((entry) {
                 int row = entry.key;
@@ -129,12 +159,14 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
-                _resetBoard();
+                if (_checkWinner() != null) {
+                  _resetBoard();
+                }
               },
-              child: Text('Restart Game'),
+              child: const Text('Restart Game'),
             ),
           ],
         ),
