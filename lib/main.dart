@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:math';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(TicTacToeApp());
 }
 
@@ -37,7 +38,7 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
   void initState() {
     super.initState();
     _gameId = _generateRandomGameId();
-    gameRef = FirebaseDatabase.instance.reference().child('games/$_gameId');
+    gameRef = FirebaseDatabase.instance.ref().child('games/$_gameId');
     _board = List.generate(3, (_) => List.filled(3, ''));
     gameRef.set({
       'board': _board,
