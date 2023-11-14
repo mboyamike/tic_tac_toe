@@ -60,7 +60,6 @@ class _TicTacToeGameState extends State<TicTacToeGame> {
 
   // Generate a random game ID
   String _generateRandomGameId() {
-    return '8316';
     const int min = 1000; // You can adjust the range as needed
     const int max = 9999;
     return '${_random.nextInt(max - min + 1) + min}';
