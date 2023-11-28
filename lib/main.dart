@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tic_tac_toe/sign_in_screen.dart';
 import 'dart:math';
 import 'firebase_options.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(TicTacToeApp());
+  runApp(ProviderScope(child: TicTacToeApp()));
 }
 
 class TicTacToeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Tic-Tac-Toe',
-      home: TicTacToeGame(),
+      home: SignInScreen(),
     );
   }
 }
