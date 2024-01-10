@@ -12,6 +12,12 @@ class Repository {
     return firebaseAuth.authStateChanges();
   }
 
+  Future<UserCredential> signUpWithEmailAndPassword(
+      {required String email, required String password}) {
+    return firebaseAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
+  }
+
   Future<UserCredential> signInWithEmailAndPassword(
       {required String email, required String password}) {
     return firebaseAuth.signInWithEmailAndPassword(

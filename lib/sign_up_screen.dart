@@ -3,25 +3,27 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tic_tac_toe/authentication_provider.dart';
-import 'package:tic_tac_toe/sign_up_screen.dart';
+import 'package:tic_tac_toe/sign_in_screen.dart';
 
-class SignInScreen extends ConsumerStatefulWidget {
-  const SignInScreen({super.key});
+class SignUpScreen extends ConsumerStatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  ConsumerState<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignInScreenState extends ConsumerState<SignInScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
     super.dispose();
     emailController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
   }
 
   @override
@@ -64,19 +66,32 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     }
                   },
                 ),
+                const SizedBox(height: 32),
+                const Text('Confirm Password'),
+                TextFormField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == passwordController.text) {
+                      return null;
+                    }
+
+                    return 'Please make sure your password and confirmed passwords match';
+                  },
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Text('Don\'t have an account? '),
+                    const Text('Already have an account? '),
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => const SignUpScreen(),
+                            builder: (context) => const SignInScreen(),
                           ),
                         );
                       },
-                      child: const Text('Sign Up'),
+                      child: const Text('Sign In'),
                     ),
                   ],
                 ),
@@ -98,7 +113,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           password: passwordController.text,
                         );
                       },
-                      child: Text('Sign In With Email and password'),
+                      child: const Text('Sign Up With Email and password'),
                     ),
                     const SizedBox(
                       width: 20,

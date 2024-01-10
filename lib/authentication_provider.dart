@@ -12,8 +12,30 @@ class Authentication extends _$Authentication {
     return repository.userStream();
   }
 
+  Future<void> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final repository = ref.read(repositoryProvider);
+    await repository.signUpWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
 
-Future <void> signInAsGuest() async{
- final repository = ref.read (repositoryProvider);
- await repository.signInAsGuest();
-} }
+  Future<void> signInAsGuest() async {
+    final repository = ref.read(repositoryProvider);
+    await repository.signInAsGuest();
+  }
+
+  Future<void> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final repository = ref.read(repositoryProvider);
+    await repository.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+  }
+}
