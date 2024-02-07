@@ -1,11 +1,15 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tic_tac_toe/authentication_provider.dart';
+import 'package:tic_tac_toe/models/game.dart';
+import 'package:tic_tac_toe/repositories.dart';
 import 'package:tic_tac_toe/single_player_tic_tac_toe_game.dart';
 
 import 'multi_player_tic_tac_toe_game.dart';
 
-class MainMenuScreen extends StatelessWidget {
+class MainMenuScreen extends ConsumerWidget {
   const MainMenuScreen({super.key});
 
   // Generate a random game ID
@@ -16,7 +20,7 @@ class MainMenuScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Center(
         child: SizedBox(
@@ -38,10 +42,32 @@ class MainMenuScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
+                onPressed: () async {
+                  final navigator = Navigator.of(context);
+                  final user = await ref.read(authenticationProvider.future);
+                  if (user == null) {
+                    return;
+                  }
+
+                  final repository = ref.read(repositoryProvider);
+                  final game = Game(
+                    id: _generateRandomGameId(),
+                    player1Id: user.uid,
+                    player2Id: null,
+                    currentPlayerId: user.uid,
+                    board: [
+                      ['', '', ''],
+                      ['', '', ''],
+                      ['', '', ''],
+                    ],
+                    winner: null,
+                  );
+                  await repository.createGame(game: game);
+                  navigator.push(
                     MaterialPageRoute(
-                      builder: (_) => MultiPlayerTicTacToeGame(gameId: _generateRandomGameId(),),
+                      builder: (_) => MultiPlayerTicTacToeGame(
+                        gameId: game.id,
+                      ),
                     ),
                   );
                 },
