@@ -1,4 +1,5 @@
-import 'dart:math';
+import 'dart:math' hide log;
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,18 +10,25 @@ import 'package:tic_tac_toe/single_player_tic_tac_toe_game.dart';
 
 import 'multi_player_tic_tac_toe_game.dart';
 
-class MainMenuScreen extends ConsumerWidget {
+class MainMenuScreen extends ConsumerStatefulWidget {
   const MainMenuScreen({super.key});
 
+  @override
+  ConsumerState<MainMenuScreen> createState() => _MainMenuScreenState();
+}
+
+class _MainMenuScreenState extends ConsumerState<MainMenuScreen> {
   // Generate a random game ID
   String _generateRandomGameId() {
-    const int min = 1000; // You can adjust the range as needed
-    const int max = 9999;
+    const int min = 10000; // You can adjust the range as needed
+    const int max = 99999;
     return '${Random().nextInt(max - min + 1) + min}';
   }
 
+  String gameID = '';
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: SizedBox(
@@ -78,14 +86,86 @@ class MainMenuScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Expanded(
-                      child: TextField(
-                    decoration: InputDecoration(labelText: 'Game Code'),
-                  )),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (newValue) {
+                        setState(() {
+                          gameID = newValue.trim();
+                        });
+                      },
+                      decoration: const InputDecoration(labelText: 'Game Code'),
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  ElevatedButton(
-                      onPressed: () {},
-                      child: const Text('Join Multiplayer Game')),
+                  Builder(builder: (context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        if (gameID.trim().isNotEmpty) {
+                          final scaffoldMessenger =
+                              ScaffoldMessenger.maybeOf(context);
+                          final navigator = Navigator.of(context);
+
+                          final (game, user) = await (
+                            ref.read(
+                                gameNotifierProvider(gameID: gameID).future),
+                            ref.read(authenticationProvider.future)
+                          ).wait;
+
+                          log('Game - $game');
+                          log('User - $user');
+
+                          if (user == null) {
+                            scaffoldMessenger?.showSnackBar(
+                              const SnackBar(
+                                content: Text('You need to be logged in'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (game == null) {
+                            scaffoldMessenger?.showSnackBar(
+                              SnackBar(
+                                content: Text('Game with ID $gameID not found'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (![game.player1Id, game.player2Id]
+                                  .contains(user.uid) &&
+                              game.player2Id != null) {
+                            scaffoldMessenger?.showSnackBar(
+                              const SnackBar(
+                                content: Text('Game is full. Pick another'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (game.player2Id == null) {
+                            await ref
+                                .read(
+                                  gameNotifierProvider(gameID: gameID).notifier,
+                                )
+                                .editGame(
+                                  game: game.copyWith(
+                                    player2Id: user.uid,
+                                  ),
+                                );
+                          }
+
+                          navigator.push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  MultiPlayerTicTacToeGame(gameId: game.id),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Join Multiplayer Game'),
+                    );
+                  }),
                 ],
               ),
             ],

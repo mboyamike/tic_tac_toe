@@ -6,7 +6,7 @@ part of 'multi_player_tic_tac_toe_game.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameNotifierHash() => r'e002108e5c4d8c0936f19ed583f22951c5722c1e';
+String _$gameNotifierHash() => r'7ae3e683ee0429443909b9c853da70d2ce1abecb';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,10 +29,11 @@ class _SystemHash {
   }
 }
 
-abstract class _$GameNotifier extends BuildlessAutoDisposeAsyncNotifier<Game?> {
+abstract class _$GameNotifier
+    extends BuildlessAutoDisposeStreamNotifier<Game?> {
   late final String gameID;
 
-  FutureOr<Game?> build({
+  Stream<Game?> build({
     required String gameID,
   });
 }
@@ -81,7 +82,7 @@ class GameNotifierFamily extends Family<AsyncValue<Game?>> {
 
 /// See also [GameNotifier].
 class GameNotifierProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<GameNotifier, Game?> {
+    extends AutoDisposeStreamNotifierProviderImpl<GameNotifier, Game?> {
   /// See also [GameNotifier].
   GameNotifierProvider({
     required String gameID,
@@ -112,7 +113,7 @@ class GameNotifierProvider
   final String gameID;
 
   @override
-  FutureOr<Game?> runNotifierBuild(
+  Stream<Game?> runNotifierBuild(
     covariant GameNotifier notifier,
   ) {
     return notifier.build(
@@ -137,7 +138,8 @@ class GameNotifierProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<GameNotifier, Game?> createElement() {
+  AutoDisposeStreamNotifierProviderElement<GameNotifier, Game?>
+      createElement() {
     return _GameNotifierProviderElement(this);
   }
 
@@ -155,13 +157,13 @@ class GameNotifierProvider
   }
 }
 
-mixin GameNotifierRef on AutoDisposeAsyncNotifierProviderRef<Game?> {
+mixin GameNotifierRef on AutoDisposeStreamNotifierProviderRef<Game?> {
   /// The parameter `gameID` of this provider.
   String get gameID;
 }
 
 class _GameNotifierProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<GameNotifier, Game?>
+    extends AutoDisposeStreamNotifierProviderElement<GameNotifier, Game?>
     with GameNotifierRef {
   _GameNotifierProviderElement(super.provider);
 

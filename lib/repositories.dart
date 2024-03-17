@@ -20,16 +20,24 @@ class Repository {
     return firebaseAuth.authStateChanges();
   }
 
-  Future<UserCredential> signUpWithEmailAndPassword(
-      {required String email, required String password}) {
+  Future<UserCredential> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) {
     return firebaseAuth.createUserWithEmailAndPassword(
-        email: email, password: password);
+      email: email,
+      password: password,
+    );
   }
 
-  Future<UserCredential> signInWithEmailAndPassword(
-      {required String email, required String password}) {
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) {
     return firebaseAuth.signInWithEmailAndPassword(
-        email: email, password: password);
+      email: email,
+      password: password,
+    );
   }
 
   Future<UserCredential> signInAsGuest() async {
@@ -40,11 +48,31 @@ class Repository {
     return firebaseAuth.signOut();
   }
 
+  Stream<Game?> fetchGameStream({required String gameID}) async* {
+    final reference = firebaseDatabase.ref('games').child(gameID);
+    final snapshot = await reference.get();
+    final gameMap = snapshot.value;
+    if (gameMap is Map) {
+      yield Game.fromJson(Map<String, dynamic>.from(gameMap));
+    } else {
+      yield null;
+    }
+
+    await for (final event in reference.onValue) {
+      final gameMap = event.snapshot.value;
+      if (gameMap is Map) {
+        yield Game.fromJson(Map<String, dynamic>.from(gameMap));
+      } else {
+        yield null;
+      }
+    }
+  }
+
   Future<Game?> fetchGame({required String gameID}) async {
     final reference = firebaseDatabase.ref('games').child(gameID);
     final snapshot = await reference.get();
+
     if (snapshot.exists) {
-      // fetch game logic
       final data = snapshot.value as Map;
       return Game.fromJson(Map<String, Object?>.from(data));
     }
