@@ -6,7 +6,7 @@ part of 'multi_player_tic_tac_toe_game.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameNotifierHash() => r'7ae3e683ee0429443909b9c853da70d2ce1abecb';
+String _$gameNotifierHash() => r'378aa5d8ffcb18b0e299617b0881ba1d645e28cb';
 
 /// Copied from Dart SDK
 class _SystemHash {

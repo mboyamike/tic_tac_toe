@@ -15,10 +15,7 @@ class GameNotifier extends _$GameNotifier {
   @override
   Stream<Game?> build({required String gameID}) {
     final repository = ref.watch(repositoryProvider);
-    return repository.fetchGameStream(gameID: gameID).map((event) {
-      log('Event $event');
-      return event;
-    });
+    return repository.fetchGameStream(gameID: gameID);
   }
 
   Future<void> editGame({required Game game}) async {
@@ -30,22 +27,33 @@ class GameNotifier extends _$GameNotifier {
     Game? game = await future;
     if (game == null) return;
 
-    final (player1, player2) = (game.player1Id, game.player2Id);
-
-    game = game.copyWith(
-      currentPlayerId: player2,
-      player1Id: player2 ?? player1,
-      player2Id: player2 == null ? null : player1,
-      winner: null,
-      board: [
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', ''],
-      ],
-    );
+    final resetedGame = switch (game) {
+      Game(player1Id: final player1, player2Id: final player2?) =>
+        game.copyWith(
+          currentPlayerId: player2,
+          player1Id: player2,
+          player2Id: player1,
+          winner: null,
+          board: [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', ''],
+          ],
+        ),
+      Game(player1Id: final player1) => game.copyWith(
+          currentPlayerId: player1,
+          player1Id: player1,
+          winner: null,
+          board: [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', ''],
+          ],
+        ),
+    };
 
     final repository = ref.read(repositoryProvider);
-    return repository.editGame(game: game);
+    return repository.editGame(game: resetedGame);
   }
 }
 
@@ -218,20 +226,24 @@ class _MultiplayerTicTacToeGameContentState
   @override
   Widget build(BuildContext context) {
     String? winner = _checkWinner();
+    final userID = ref.watch(authenticationProvider).valueOrNull?.uid;
+    String loggedInPlayerSymbol = game.player1Id == userID ? 'X' : 'O';
     final currentPlayer = game.player1Id == game.currentPlayerId ? 'X' : 'O';
-    String status;
-    if (winner == 'draw') {
-      status = "It's a draw!";
-    } else if (winner != null) {
-      status = 'Player $winner wins!';
-    } else {
-      status = 'Player $currentPlayer\'s turn';
-    }
+
+    String status = switch (winner) {
+      'draw' => "It's a draw",
+      != null => 'Player $winner wins!',
+      _ => "Player $currentPlayer's turn",
+    };
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
+          Text(
+            'You are $loggedInPlayerSymbol',
+            style: const TextStyle(fontSize: 16),
+          ),
           Text(
             status,
             style: const TextStyle(fontSize: 20.0),
@@ -251,14 +263,13 @@ class _MultiplayerTicTacToeGameContentState
             }).toList(),
           ),
           const SizedBox(height: 20.0),
-          ElevatedButton(
-            onPressed: () {
-              if (_checkWinner() != null) {
+          if (winner != null)
+            ElevatedButton(
+              onPressed: () {
                 _resetBoard();
-              }
-            },
-            child: const Text('Restart Game'),
-          ),
+              },
+              child: const Text('Restart Game'),
+            ),
         ],
       ),
     );
